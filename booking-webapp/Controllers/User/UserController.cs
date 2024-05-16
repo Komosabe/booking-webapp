@@ -1,135 +1,92 @@
-﻿using BackendBooking.Interface;
+﻿using AutoMapper;
+using BackendBooking.Authorization;
+using BackendBooking.Helpers;
+using BackendBooking.Interface;
 using BackendBooking.Models.User;
 using BackendBooking.Service;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace BackendBooking.Controllers.User
 {
+    [Authorize]
     [ApiController]
-    [Route("api/[controller]")]
-    public class UserController : Controller
+    [Route("[controller]")]
+    public class UsersController : ControllerBase
     {
-        private readonly IUserService _userService;
-        private readonly IReservationService _reservationService;
+        private IUserService _userService;
+        private readonly AppSettings _appSettings;
 
-        public UserController(IUserService userService, IReservationService reservationService)
+        public UsersController(
+            IUserService userService,
+            IOptions<AppSettings> appSettings)
         {
             _userService = userService;
-            _reservationService = reservationService;
+            _appSettings = appSettings.Value;
         }
 
-        #region CreateUser
-        [HttpPost("CreateUser")]
-        public async Task<IActionResult> CreateUser(CreateUserModel model)
+        #region Authenticate
+        [AllowAnonymous]
+        [HttpPost("authenticate")]
+        public IActionResult Authenticate(AuthenticateRequest model)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-            try
-            {
-                var userid = await _userService.CreateUserAsync(model);
-                return Ok($"User dodany prawidłowo. Identyfikator user: {userid}");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Błąd podczas tworzenia usera: {ex.Message}");
-            }
-            
+            var response = _userService.Authenticate(model);
+            return Ok(response);
         }
         #endregion
 
-        #region DeleteUser
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        #region Register
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public IActionResult Register(RegisterRequest model)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            await _userService.DeleteUserAsync(id);
-
-            return Ok("User usunięty prawidłowo.");
+            _userService.Register(model);
+            return Ok(new { message = "Registration successful" });
         }
         #endregion
 
         #region GetAllUsers
-        [HttpGet("GetAllUsers")]
-        public async Task<IActionResult> GetAllUsers()
+        [HttpGet]
+        public IActionResult GetAll()
         {
-            var users = await _userService.GetAllUserAsync();
+            var users = _userService.GetAll();
             return Ok(users);
         }
         #endregion
 
         #region GetUserById
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetUser(int id)
+        public IActionResult GetById(int id)
         {
-            try
-            {
-                var user = await _userService.GetUserByIdAsync(id);
-                return Ok(user);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Błąd podczas pobierania użytkownika: {ex.Message}");
-            }
+            var user = _userService.GetById(id);
+            return Ok(user);
+        }
+        #endregion
+
+        #region GetUserViewById
+        [HttpGet("{id}/View")] // Get by Id 
+        public IActionResult GetView(int id)
+        {
+            var user = _userService.GetViewById(id);
+            return Ok(user);
         }
         #endregion
 
         #region UpdateUser
-        [HttpPut("UpdateUser")]
-        public async Task<IActionResult> UpdateUser(UpdateUserModel model)
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, UpdateUserRequest model)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            try
-            {
-                await _userService.UpdateUserAsync(model);
-                return Ok("Dane użytkownika zostały zaktualizowane prawidłowo");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Błąd podczas aktualizacji danych użytkownika: {ex.Message}");
-            }
+            _userService.Update(id, model);
+            return Ok(new { message = "User updated successfully" });
         }
         #endregion
 
-        #region GetReservationAllForUser
-        [HttpGet("GetReservationsForUser/{userId}")]
-        public async Task<IActionResult> GetReservationsForUser(int userId)
+        #region DeleteUser
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
         {
-            try
-            {
-                var reservations = await _reservationService.GetReservationsForUserAsync(userId);
-                return Ok(reservations);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Błąd podczas pobierania rezerwacji dla użytkownika: {ex.Message}");
-            }
-        }
-        #endregion
-
-        #region Login
-        [HttpPost("Login")]
-        public async Task<IActionResult> Login(LoginModel model)
-        {
-            try
-            {
-                var isAuthenticated = await _userService.AuthenticateAsync(model.Username, model.Password);
-                if (isAuthenticated)
-                {
-                    return Ok("Login successful");
-                }
-                else
-                {
-                    return BadRequest("Invalid username or password");
-                }
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Error during user authentication: {ex.Message}");
-            }
+            _userService.Delete(id);
+            return Ok(new { message = "User deleted successfully" });
         }
         #endregion
     }

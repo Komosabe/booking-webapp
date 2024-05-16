@@ -12,21 +12,27 @@ namespace BackendBooking.Helpers
         public AutoMapperProfile()
         {
             #region User
-            // CreateUser -> User
-            CreateMap<CreateUserModel, User>();
+            // RegisterRequest -> User
+            CreateMap<RegisterRequest, User>();
 
-            // UserModel -> User
-            CreateMap<UserModel, User>();
+            // User -> AuthenticateResponse
+            CreateMap<User, AuthenticateResponse>();
 
-            // User -> UserModel
-            CreateMap<User, UserModel>();
+            // User -> GetModelUser
+            CreateMap<User, GetModelUser>();
 
-            // UpdateUserModel -> User
-            CreateMap<UpdateUserModel, User>();
+            // UpdateRequest -> User
+            CreateMap<UpdateUserRequest, User>()
+                .ForAllMembers(x => x.Condition(
+                    (src, dest, prop) =>
+                    {
+                        // ignore null & empty string properties
+                        if (prop == null) return false;
+                        if (prop.GetType() == typeof(string) && string.IsNullOrEmpty((string)prop)) return false;
 
-            // User -> LoginModel
-            CreateMap<User, LoginModel>();
-
+                        return true;
+                    }
+                ));
             #endregion
 
             #region Hall

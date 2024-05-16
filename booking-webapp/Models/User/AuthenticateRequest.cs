@@ -1,11 +1,13 @@
-﻿using BackednBooking.Entities;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace BackendBooking.Models.User
 {
-    public class UserModel
+    public class AuthenticateRequest
     {
-        public int Id { get; set; }
+        [Required]
         public string Username { get; set; }
+
+        [Required]
         public string Password { get; set; }
     }
 }

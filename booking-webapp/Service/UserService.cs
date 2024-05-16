@@ -1,8 +1,12 @@
 ﻿using AutoMapper;
 using BackednBooking.Entities;
 using BackednBooking.Helpers;
+using BackendBooking.Authorization;
+using BackendBooking.Helpers;
 using BackendBooking.Interface;
 using BackendBooking.Models.User;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 
@@ -10,128 +14,119 @@ namespace BackendBooking.Service
 {
     public class UserService : IUserService
     {
-        private readonly BookingDbContext _context;
+        private BookingDbContext _context;
+        private IJwtUtils _jwtUtils;
         private readonly IMapper _mapper;
 
-        public UserService(BookingDbContext context, IMapper mapper)
+        public UserService(
+            BookingDbContext context,
+            IJwtUtils jwtUtils,
+            IMapper mapper)
         {
             _context = context;
+            _jwtUtils = jwtUtils;
             _mapper = mapper;
         }
 
-        #region CreateUserAsync
-        public async Task<int> CreateUserAsync(CreateUserModel model)
+        #region Authenticate
+        public AuthenticateResponse Authenticate(AuthenticateRequest model)
         {
-            try
-            {
-                var userEntity = _mapper.Map<User>(model);
+            var user = _context.Users.SingleOrDefault(x => x.Username == model.Username);
 
-                _context.Users.Add(userEntity);
+            // validate
+            if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
+                throw new AppException("Username or password is incorrect");
 
-                await _context.SaveChangesAsync();
-
-                return userEntity.Id;
-            }
-            catch (DbUpdateException ex)
-            {
-                throw new Exception("Błąd podczas aktualizacji bazy danych", ex);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Wystąpił nieoczekiwany błąd", ex);
-            }
+            // authentication successful
+            var response = _mapper.Map<AuthenticateResponse>(user);
+            response.Token = _jwtUtils.GenerateToken(user);
+            return response;
         }
         #endregion
 
-        #region DeleteUserAsync
-        public async Task DeleteUserAsync(int id)
+        #region Register
+        public void Register(RegisterRequest model)
         {
-            try
-            {
-                var user = await _context.Users.FindAsync(id);
+            // validate
+            if (_context.Users.Any(x => x.Username == model.Username))
+                throw new AppException("Username '" + model.Username + "' is already taken");
 
-                if (user == null)
-                    throw new Exception("Użytkownik o podantym identyfikatorze nie istnieje");
+            // map model to new user object
+            var user = _mapper.Map<User>(model);
 
-                _context.Users.Remove(user);
+            // hash password
 
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Wystąpił błąd podczas usuwania użytkownika: ", ex);
-            }
+            //user.PasswordHash = BCrypt.HashPassword(model.Password);
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
+            // save user
+            _context.Users.Add(user);
+            _context.SaveChanges();
         }
         #endregion
 
-        #region GetAllUsersAsync
-        public async Task<IEnumerable<UserModel>> GetAllUserAsync()
+        #region GetAllUsers
+        public IEnumerable<User> GetAll()
         {
-            try
-            {
-                var users = await _context.Users.ToListAsync();
-                return _mapper.Map<IEnumerable<UserModel>>(users);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Wystąpił błąd podczas pobierania wszystkich użytkowników: ", ex);
-            }
-            
+            return _context.Users;
         }
         #endregion
 
         #region GetUserById
-        public async Task<UserModel> GetUserByIdAsync(int id)
+        public User GetById(int id)
         {
-            try
-            {
-                var user = await _context.Users.FindAsync(id);
+            return getUser(id);
+        }
+        #endregion
 
-                if (user == null)
-                    throw new Exception("Użytkownik o podanym identyfikatorze nie istnieje");
+        #region GetUserViewByid
+        public GetModelUser GetViewById(int id)
+        {
+            var user = _context.Users
+                    .Include(a => a.Reservations)
+                    .FirstOrDefault(b => b.Id == id);
+            if (user == null) throw new KeyNotFoundException("User not found");
+            return _mapper.Map<GetModelUser>(user);
+        }
+        #endregion
 
-                return _mapper.Map<UserModel>(user);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Wystąpił błąd podczas pobierania użytkownika", ex);
-            }
+        #region getUser
+        private User getUser(int id)
+        {
+            var user = _context.Users
+                    .Include(b => b.Reservations)
+                    .FirstOrDefault(b => b.Id == id);
+
+            if (user == null) throw new KeyNotFoundException("User not found");
+            return user;
         }
         #endregion
 
         #region UpdateUser
-        public async Task UpdateUserAsync(UpdateUserModel model)
+        public void Update(int id, UpdateUserRequest model)
         {
-            try
-            {
-                var user = await _context.Users.FindAsync(model.Id);
+            var user = getUser(id);
 
-                if (user == null)
-                    throw new Exception("Użytkownik o podanym identyfikatorze nie istnieje");
+            // validate
+            if (model.Username != user.Username && _context.Users.Any(x => x.Username == model.Username))
+                throw new AppException("Username '" + model.Username + "' is already taken");
 
-                _mapper.Map(model, user);
-                _context.Users.Update(user);
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Wystąpił błąd podczas aktualizacji danych użytkownika", ex);
-            }
+            // hash password if it was entered
+            if (!string.IsNullOrEmpty(model.Password))
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
+
+            // copy model to user and save
+            _mapper.Map(model, user);
+            _context.Users.Update(user);
+            _context.SaveChanges();
         }
         #endregion
 
-        #region Login
-        public async Task<bool> AuthenticateAsync(string username, string password)
+        #region DeleteUser
+        public void Delete(int id)
         {
-            try
-            {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username && u.Password == password);
-                return user != null;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Błąd podczas autentykacji użytkownika.", ex);
-            }
+            var user = getUser(id);
+            _context.Users.Remove(user);
+            _context.SaveChanges();
         }
         #endregion
     }

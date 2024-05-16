@@ -1,5 +1,6 @@
 using BackednBooking.Entities;
 using BackednBooking.Helpers;
+using BackendBooking.Authorization;
 using BackendBooking.Interface;
 using BackendBooking.Service;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddAuthentication();
 
 builder.Services.AddAutoMapper(typeof(Program));
 
@@ -24,6 +26,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IHallService, HallService>();
 builder.Services.AddScoped<IConcertService, ConcertService>();
 builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 
 var app = builder.Build();
 
