@@ -1,6 +1,7 @@
 using BackednBooking.Entities;
 using BackednBooking.Helpers;
 using BackendBooking.Authorization;
+using BackendBooking.Helpers;
 using BackendBooking.Interface;
 using BackendBooking.Service;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ var connectionString = builder.Configuration.GetConnectionString("BookingDbConne
 builder.Services.AddDbContext<BookingDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -29,6 +31,20 @@ builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 
 var app = builder.Build();
+
+// configure HTTP request pipeline
+{
+    // global cors policy
+    app.UseCors(x => x
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader());
+
+    // custom jwt auth middleware
+    app.UseMiddleware<JwtMiddleware>();
+
+    app.MapControllers();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
