@@ -33,6 +33,8 @@ namespace BackendBooking.Helpers
                         return true;
                     }
                 ));
+
+            CreateMap<User, UserMe>();
             #endregion
 
             #region Hall

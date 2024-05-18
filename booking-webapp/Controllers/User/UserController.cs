@@ -15,13 +15,16 @@ namespace BackendBooking.Controllers.User
     public class UsersController : ControllerBase
     {
         private IUserService _userService;
+        private readonly IJwtUtils _jwtUtils;
         private readonly AppSettings _appSettings;
 
         public UsersController(
             IUserService userService,
+            IJwtUtils jwtUtils,
             IOptions<AppSettings> appSettings)
         {
             _userService = userService;
+            _jwtUtils = jwtUtils;
             _appSettings = appSettings.Value;
         }
 
@@ -87,6 +90,20 @@ namespace BackendBooking.Controllers.User
         {
             _userService.Delete(id);
             return Ok(new { message = "User deleted successfully" });
+        }
+        #endregion
+
+        #region GetCurrentUser
+        [HttpGet("Me")]
+        public IActionResult GetCurrentUser()
+        {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            var userId = _jwtUtils.ValidateToken(token);
+            if (userId == null)
+                return Unauthorized(new { message = "Unauthorized" });
+
+            var userMe = _userService.GetCurrentUserDto(userId.Value);
+            return Ok(userMe);
         }
         #endregion
     }

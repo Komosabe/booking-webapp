@@ -129,5 +129,25 @@ namespace BackendBooking.Service
             _context.SaveChanges();
         }
         #endregion
+
+        #region GetCurrentUserDto
+        public UserMe GetCurrentUserDto(int id)
+        {
+            var user = getUserMe(id);
+            return _mapper.Map<UserMe>(user);
+        }
+        #endregion
+
+        #region getUser
+        private User getUserMe(int id)
+        {
+            var user = _context.Users
+                    .Include(b => b.Reservations)
+                    .FirstOrDefault(b => b.Id == id);
+
+            if (user == null) throw new KeyNotFoundException("User not found");
+            return user;
+        }
+        #endregion
     }
 }

@@ -12,5 +12,6 @@ namespace BackendBooking.Interface
         GetModelUser GetViewById(int id);
         void Update(int id, UpdateUserRequest model);
         void Delete(int id);
+        UserMe GetCurrentUserDto(int id);
     }
 }
