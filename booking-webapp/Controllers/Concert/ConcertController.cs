@@ -1,9 +1,11 @@
-﻿using BackendBooking.Interface;
+﻿using BackendBooking.Authorization;
+using BackendBooking.Interface;
 using BackendBooking.Models.Concert;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BackendBooking.Controllers.Concert
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ConcertController : Controller

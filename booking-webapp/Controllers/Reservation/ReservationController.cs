@@ -1,9 +1,11 @@
-﻿using BackendBooking.Interface;
+﻿using BackendBooking.Authorization;
+using BackendBooking.Interface;
 using BackendBooking.Models.Reservation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BackendBooking.Controllers.Reservation
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ReservationController : Controller
@@ -24,7 +26,8 @@ namespace BackendBooking.Controllers.Reservation
 
             try
             {
-                var reservationId = await _reservationService.CreateReservationAsync(model);
+                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                var reservationId = await _reservationService.CreateReservationAsync(model, token);
                 return Ok($"Rezerwacja została utworzona pomyślnie. Id: {reservationId}");
             }
             catch (Exception ex)
