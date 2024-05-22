@@ -37,15 +37,15 @@ namespace BackendBooking.Controllers.Concert
         #endregion
 
         #region DeleteConcert
-        [HttpDelete("DeleteConcert")]
-        public async Task<IActionResult> DeleteConcert(int id)
+        [HttpDelete("DeleteConcert/{concertId}")]
+        public async Task<IActionResult> DeleteConcert(int concertId)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                await _concertService.DeleteConcertAsync(id);
+                await _concertService.DeleteConcertAsync(concertId);
                 return Ok("Koncert został usunięty prawidłowo");
             }
             catch (Exception ex)
@@ -88,15 +88,15 @@ namespace BackendBooking.Controllers.Concert
         #endregion
 
         #region UpdateConcert
-        [HttpPut("UpdateConcert")]
-        public async Task<IActionResult> UpdateConcert(UpdateConcertModel model)
+        [HttpPut("UpdateConcert/{concertId}")]
+        public async Task<IActionResult> UpdateConcert([FromRoute] int concertId, [FromBody] UpdateConcertModel model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                await _concertService.UpdateConcertAsync(model);
+                await _concertService.UpdateConcertAsync(concertId, model);
                 return Ok("Dane koncertu zostały zaktualizowane prawidłowo");
             }
             catch (Exception ex)

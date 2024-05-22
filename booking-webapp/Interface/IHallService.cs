@@ -8,6 +8,6 @@ namespace BackendBooking.Interface
         Task DeleteHallAsync(int id);
         Task<IEnumerable<HallModel>> GetAllHallsAsync();
         Task<HallModel> GetHallByIdAsync(int id);
-        Task UpdateHallAsync(UpdateHallModel model);
+        Task UpdateHallAsync(int hallId, UpdateHallModel model);
     }
 }

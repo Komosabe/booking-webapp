@@ -92,11 +92,11 @@ namespace BackendBooking.Service
         #endregion
 
         #region UpdateConcert
-        public async Task UpdateConcertAsync(UpdateConcertModel model)
+        public async Task UpdateConcertAsync(int concertId, UpdateConcertModel model)
         {
             try
             {
-                var concert = await _context.Concerts.FindAsync(model.Id);
+                var concert = await _context.Concerts.FindAsync(concertId);
 
                 if (concert == null)
                     throw new Exception("Koncert o podanym identyfikatorze nie istnieje");

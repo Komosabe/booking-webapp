@@ -93,11 +93,11 @@ namespace BackendBooking.Service
         #endregion
 
         #region UpdateHall
-        public async Task UpdateHallAsync(UpdateHallModel model)
+        public async Task UpdateHallAsync(int hallId, UpdateHallModel model)
         {
             try
             {
-                var hall = await _context.Halls.FindAsync(model.Id);
+                var hall = await _context.Halls.FindAsync(hallId);
 
                 if (hall == null)
                     throw new Exception("Sala o podanym identyfikatorze nie istnieje");

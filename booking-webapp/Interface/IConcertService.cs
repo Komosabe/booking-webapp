@@ -8,6 +8,6 @@ namespace BackendBooking.Interface
         Task DeleteConcertAsync(int id);
         Task<IEnumerable<ConcertModel>> GetAllConcertsAsync();
         Task<ConcertModel> GetConcertByIdAsync(int id);
-        Task UpdateConcertAsync(UpdateConcertModel model);
+        Task UpdateConcertAsync(int concertId, UpdateConcertModel model);
     }
 }

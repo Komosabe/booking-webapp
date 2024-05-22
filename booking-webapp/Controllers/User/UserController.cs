@@ -77,7 +77,7 @@ namespace BackendBooking.Controllers.User
 
         #region UpdateUser
         [HttpPut("{id}")]
-        public IActionResult Update(int id, UpdateUserRequest model)
+        public IActionResult Update([FromRoute] int id, UpdateUserRequest model)
         {
             _userService.Update(id, model);
             return Ok(new { message = "User updated successfully" });

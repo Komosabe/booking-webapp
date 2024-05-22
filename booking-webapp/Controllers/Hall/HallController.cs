@@ -37,15 +37,15 @@ namespace BackendBooking.Controllers.Hall
         #endregion
 
         #region DeleteHall
-        [HttpDelete("DeleteHall")]
-        public async Task<IActionResult> DeleteHall(int id)
+        [HttpDelete("DeleteHall/{hallId}")]
+        public async Task<IActionResult> DeleteHall(int hallId)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                await _hallService.DeleteHallAsync(id);
+                await _hallService.DeleteHallAsync(hallId);
                 return Ok("Sala została usunięta prawidłowo");
             }
             catch (Exception ex)
@@ -88,15 +88,15 @@ namespace BackendBooking.Controllers.Hall
         #endregion
 
         #region UpdateHall
-        [HttpPut("UpdateHall")]
-        public async Task<IActionResult> UpdateHall(UpdateHallModel model)
+        [HttpPut("UpdateHall/{hallId}")]
+        public async Task<IActionResult> UpdateHall([FromRoute] int hallId, [FromBody] UpdateHallModel model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                await _hallService.UpdateHallAsync(model);
+                await _hallService.UpdateHallAsync(hallId, model);
                 return Ok("Dane sali zostały zaktualizowane prawidłowo");
             }
             catch (Exception ex)
