@@ -70,12 +70,13 @@ namespace BackendBooking.Controllers.Reservation
         #endregion
 
         #region GetReservationsForUser
-        [HttpGet("GetReservationsForUser/{userId}")]
-        public async Task<IActionResult> GetReservationsForUser(int userId)
+        [HttpGet("GetReservationsForUser")]
+        public async Task<IActionResult> GetReservationsForUser()
         {
             try
             {
-                var reservations = await _reservationService.GetReservationsForUserAsync(userId);
+                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                var reservations = await _reservationService.GetReservationsForUserAsync(token);
                 return Ok(reservations);
             }
             catch (Exception ex)

@@ -6,5 +6,6 @@
         public string ArtistName { get; set; }
         public DateTime DateTime { get; set; }
         public int HallId { get; set; }
+        public int CreatedByUserId { get; set; }
     }
 }

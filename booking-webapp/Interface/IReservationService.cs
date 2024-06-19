@@ -7,7 +7,7 @@ namespace BackendBooking.Interface
         Task<int> CreateReservationAsync(CreateReservationModel model, string token);
         Task DeleteReservationAsync(int reservationId);
         Task<IEnumerable<ReservationModel>> GetReservationsForConcertAsync(int concertId);
-        Task<IEnumerable<ReservationModel>> GetReservationsForUserAsync(int userId);
+        Task<IEnumerable<ReservationModel>> GetReservationsForUserAsync(string token);
     }
 }
 

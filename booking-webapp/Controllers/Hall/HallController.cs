@@ -26,7 +26,8 @@ namespace BackendBooking.Controllers.Hall
 
             try
             {
-                var hallId = await _hallService.CreateHallAsync(model);
+                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                var hallId = await _hallService.CreateHallAsync(model, token);
                 return Ok($"Sala została dodana prawidłowo. Identyfikator sali: {hallId}");
             }
             catch (Exception ex)
@@ -61,7 +62,8 @@ namespace BackendBooking.Controllers.Hall
         {
             try
             {
-                var halls = await _hallService.GetAllHallsAsync();
+                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                var halls = await _hallService.GetAllHallsAsync(token);
                 return Ok(halls);
             }
             catch (Exception ex)
@@ -73,7 +75,7 @@ namespace BackendBooking.Controllers.Hall
 
         #region GetHallByid
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetHall(int id)
+        public async Task<IActionResult> GetHall([FromRoute] int id)
         {
             try
             {

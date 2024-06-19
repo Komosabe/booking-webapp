@@ -43,7 +43,8 @@ namespace BackendBooking.Helpers
             CreateMap<CreateHallModel, Hall>();
 
             // Hall -> HallModel
-            CreateMap<Hall,  HallModel>();
+            CreateMap<Hall,  HallModel>()
+                .ForMember(dest => dest.IsEditable, opt => opt.Ignore());
 
             // UpdateHallModel -> Hall
             CreateMap<UpdateHallModel, Hall>();
@@ -55,7 +56,10 @@ namespace BackendBooking.Helpers
             CreateMap<CreateConcertModel, Concert>();
 
             // Concert -> ConcertModel
-            CreateMap<Concert, ConcertModel>();
+            CreateMap<Concert, ConcertModel>()
+                  .ForMember(dest => dest.IsEditable, opt => opt.Ignore())
+                  .ForMember(dest => dest.CurrentReservations, opt => opt.Ignore())
+                  .ForMember(dest => dest.MaxReservations, opt => opt.Ignore()); // Ignore IsEditable as it will be set manually
 
             // UpdateConcertModel -> Concert
             CreateMap<UpdateConcertModel, Concert>();

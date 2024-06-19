@@ -94,10 +94,14 @@ namespace BackendBooking.Service
         #endregion
 
         #region GetReservationForUserAsync
-        public async Task<IEnumerable<ReservationModel>> GetReservationsForUserAsync(int userId)
+        public async Task<IEnumerable<ReservationModel>> GetReservationsForUserAsync(string token)
         {
             try
             {
+                var userId = _jwtUtils.ValidateToken(token);
+                if (userId == null)
+                    throw new UnauthorizedAccessException("Unauthorized");
+
                 var reservations = await _context.Reservations
                     .Where(r => r.UserId == userId)
                     .ToListAsync();

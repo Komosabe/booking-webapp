@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BackendBooking.Controllers.Concert
 {
-    [Authorize]
+    //[Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ConcertController : Controller
@@ -26,7 +26,8 @@ namespace BackendBooking.Controllers.Concert
 
             try
             {
-                var concertId = await _concertService.CreateConcertAsync(model);
+                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                var concertId = await _concertService.CreateConcertAsync(model, token);
                 return Ok($"Koncert został dodany prawidłowo. Identyfikator koncertu: {concertId}");
             }
             catch (Exception ex)
@@ -61,7 +62,8 @@ namespace BackendBooking.Controllers.Concert
         {
             try
             {
-                var concerts = await _concertService.GetAllConcertsAsync();
+                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                var concerts = await _concertService.GetAllConcertsAsync(token);
                 return Ok(concerts);
             }
             catch (Exception ex)
@@ -107,3 +109,4 @@ namespace BackendBooking.Controllers.Concert
         #endregion
     }
 }
+    

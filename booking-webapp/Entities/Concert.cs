@@ -10,6 +10,8 @@ namespace BackednBooking.Entities
         public DateTime DateTime { get; set; }
         public int HallId { get; set; }
         public Hall Hall { get; set; } 
-        public ICollection<Reservation> Reservations { get; set; } 
+        public ICollection<Reservation> Reservations { get; set; }
+        public int? CreatedByUserId { get; set; }
+        public User? CreatedBy { get; set; }
     }
 }

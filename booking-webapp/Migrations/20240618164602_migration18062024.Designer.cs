@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendBooking.Migrations
 {
     [DbContext(typeof(BookingDbContext))]
-    [Migration("20240506140808_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20240618164602_migration18062024")]
+    partial class migration18062024
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -36,13 +36,24 @@ namespace BackendBooking.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CurrentReservations")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("HallId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("MaxReservations")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("HallId");
 
@@ -58,11 +69,16 @@ namespace BackendBooking.Migrations
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
                     b.Property<string>("HallName")
                         .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.ToTable("Halls");
                 });
@@ -79,11 +95,16 @@ namespace BackendBooking.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("UserId1")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ConcertId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
 
                     b.ToTable("Reservations");
                 });
@@ -94,7 +115,7 @@ namespace BackendBooking.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -109,13 +130,31 @@ namespace BackendBooking.Migrations
 
             modelBuilder.Entity("BackednBooking.Entities.Concert", b =>
                 {
+                    b.HasOne("BackednBooking.Entities.User", "CreatedBy")
+                        .WithMany("CreatedConcerts")
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("BackednBooking.Entities.Hall", "Hall")
                         .WithMany("Concerts")
                         .HasForeignKey("HallId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("CreatedBy");
+
                     b.Navigation("Hall");
+                });
+
+            modelBuilder.Entity("BackednBooking.Entities.Hall", b =>
+                {
+                    b.HasOne("BackednBooking.Entities.User", "CreatedBy")
+                        .WithMany("CreatedHalls")
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
                 });
 
             modelBuilder.Entity("BackednBooking.Entities.Reservation", b =>
@@ -131,6 +170,10 @@ namespace BackendBooking.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("BackednBooking.Entities.User", null)
+                        .WithMany("CreatedReservations")
+                        .HasForeignKey("UserId1");
 
                     b.Navigation("Concert");
 
@@ -149,6 +192,12 @@ namespace BackendBooking.Migrations
 
             modelBuilder.Entity("BackednBooking.Entities.User", b =>
                 {
+                    b.Navigation("CreatedConcerts");
+
+                    b.Navigation("CreatedHalls");
+
+                    b.Navigation("CreatedReservations");
+
                     b.Navigation("Reservations");
                 });
 #pragma warning restore 612, 618

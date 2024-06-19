@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BackednBooking.Entities;
 using BackednBooking.Helpers;
+using BackendBooking.Authorization;
 using BackendBooking.Interface;
 using BackendBooking.Models.Concert;
 using Microsoft.EntityFrameworkCore;
@@ -11,18 +12,26 @@ namespace BackendBooking.Service
     {
         private readonly BookingDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IJwtUtils _jwtUtils;
 
-        public ConcertService(BookingDbContext context, IMapper mapper)
+        public ConcertService(BookingDbContext context, IMapper mapper, IJwtUtils jwtUtils)
         {
             _context = context;
             _mapper = mapper;
+            _jwtUtils = jwtUtils;
         }
 
         #region CreateConcert
-        public async Task<int> CreateConcertAsync(CreateConcertModel model)
+        public async Task<int> CreateConcertAsync(CreateConcertModel model, string token)
         {
             try
             {
+                var userId = _jwtUtils.ValidateToken(token);
+                if (userId == null)
+                    throw new UnauthorizedAccessException("Unauthorized");
+
+                model.CreatedByUserId = userId.Value;
+
                 var concertEntity = _mapper.Map<Concert>(model);
 
                 _context.Concerts.Add(concertEntity);
@@ -58,12 +67,31 @@ namespace BackendBooking.Service
         #endregion
 
         #region GetAllConcerts
-        public async Task<IEnumerable<ConcertModel>> GetAllConcertsAsync()
+        public async Task<IEnumerable<ConcertModel>> GetAllConcertsAsync(string token)
         {
             try
             {
-                var concerts = await _context.Concerts.ToListAsync();
-                return _mapper.Map<IEnumerable<ConcertModel>>(concerts);
+                var userId = _jwtUtils.ValidateToken(token);
+                if (userId == null)
+                    throw new UnauthorizedAccessException("Unauthorized");
+
+                var concerts = await _context.Concerts
+                    .Include(c => c.CreatedBy)
+                    .Include(c => c.Hall)
+                    .Include(c => c.Reservations)
+                    .ToListAsync();
+
+                var concertModels = _mapper.Map<IEnumerable<ConcertModel>>(concerts);
+
+                foreach (var concertModel in concertModels)
+                {
+                    var concert = concerts.First(c => c.Id == concertModel.Id);
+                    concertModel.IsEditable = concert.CreatedByUserId == userId;
+                    concertModel.MaxReservations = concert.Hall.Capacity;
+                    concertModel.CurrentReservations = concert.Reservations?.Count(r => r.ConcertId == concert.Id) ?? 0;
+                }
+
+                return concertModels;
             }
             catch (Exception ex)
             {
@@ -71,6 +99,7 @@ namespace BackendBooking.Service
             }
         }
         #endregion
+
 
         #region GetConcertById
         public async Task<ConcertModel> GetConcertByIdAsync(int id)

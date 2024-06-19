@@ -1,6 +1,5 @@
 ﻿using BackednBooking.Entities;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 
 namespace BackednBooking.Helpers
 {
@@ -23,17 +22,29 @@ namespace BackednBooking.Helpers
                 .HasForeignKey(c => c.HallId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Concert>()
+                .HasOne(c => c.CreatedBy)
+                .WithMany(u => u.CreatedConcerts)
+                .HasForeignKey(c => c.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Reservation>()
                 .HasOne(r => r.Concert)
                 .WithMany(c => c.Reservations)
                 .HasForeignKey(r => r.ConcertId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Cascade); // This ensures reservations are deleted when a concert is deleted
 
             modelBuilder.Entity<Reservation>()
                 .HasOne(r => r.User)
                 .WithMany(u => u.Reservations)
                 .HasForeignKey(r => r.UserId)
-                .OnDelete(DeleteBehavior.Cascade); 
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Hall>()
+                .HasOne(h => h.CreatedBy)
+                .WithMany(u => u.CreatedHalls)
+                .HasForeignKey(h => h.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
